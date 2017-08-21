@@ -1,0 +1,47 @@
+open Lwt;
+
+open Core;
+
+open Cohttp;
+
+open Cohttp_lwt_unix;
+
+open Config;
+
+type error = string;
+
+type success = string;
+
+type response =
+  | Error error
+  | Success success;
+
+let getApiEndpoint config => config.crucible.url ^ "/rest-service/reviews-v1";
+
+let createAuthenticatedPostRequest config relativeUrl payload => {
+  let h =
+    Header.of_list [
+      ("Content-Type", "application/json"),
+      ("Accept", "application/json")
+    ];
+  let auth = `Basic (config.crucible.userName, config.crucible.password);
+  let headers = Header.add_authorization h auth;
+  let body = Cohttp_lwt_body.of_string (Yojson.Basic.to_string payload);
+  let url = getApiEndpoint config ^ relativeUrl;
+  Client.post (Uri.of_string url) ::headers ::body >>= (
+    fun (resp, body) => {
+      let isError =
+        resp |> Response.status |> Code.code_of_status |> Code.is_error;
+      switch isError {
+      | false =>
+        body |> Cohttp_lwt.Body.to_string >|= (fun body => Success body)
+      | true => Lwt.return (Error "unknown error")
+      }
+      /* Printf.printf "URL: %s\n" url;
+         Printf.printf "Response code: %d\n" code;
+         Printf.printf
+           "Headers: %s\n" (resp |> Response.headers |> Header.to_string); */
+      /* body |> Cohttp_lwt.Body.to_string >|= bodyStringToResponse */
+    }
+  )
+};
