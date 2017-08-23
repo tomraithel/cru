@@ -35,7 +35,10 @@ let post config relativeUrl payload => {
       switch isError {
       | false =>
         body |> Cohttp_lwt.Body.to_string >|= (fun body => Success body)
-      | true => Lwt.return (Error "unknown error")
+      | true =>
+        body |> Cohttp_lwt.Body.to_string >|= (
+          fun body => Error ("Error: \n" ^ body)
+        )
       }
       /* Printf.printf "URL: %s\n" url;
          Printf.printf "Response code: %d\n" code;
