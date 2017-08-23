@@ -19,5 +19,5 @@ let add config project => {
         ]
       )
     ];
-  Api.createAuthenticatedPostRequest config "" payload
+  Api.post config "" payload
 };

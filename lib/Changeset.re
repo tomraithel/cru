@@ -7,6 +7,6 @@ let add config project => {
         `Assoc [("changesetData", `List [`Assoc [("id", `String "c0efa95")]])]
       )
     ];
-  Api.createAuthenticatedPostRequest
+  Api.post
     config "/COMMERZ-REAL-2909/addChangeset" payload
 };

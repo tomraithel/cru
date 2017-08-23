@@ -18,7 +18,7 @@ type response =
 
 let getApiEndpoint config => config.crucible.url ^ "/rest-service/reviews-v1";
 
-let createAuthenticatedPostRequest config relativeUrl payload => {
+let post config relativeUrl payload => {
   let h =
     Header.of_list [
       ("Content-Type", "application/json"),
