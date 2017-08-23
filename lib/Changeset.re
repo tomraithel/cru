@@ -1,12 +1,29 @@
-let add config project => {
-  let payload =
-    `Assoc [
-      ("repository", `String "commerzreal_kon_app"),
-      (
-        "changesets",
-        `Assoc [("changesetData", `List [`Assoc [("id", `String "c0efa95")]])]
-      )
-    ];
-  Api.post
-    config "/COMMERZ-REAL-2909/addChangeset" payload
+open Lwt;
+
+type t =
+  | Error string
+  | Success;
+
+let createPayload project git =>
+  Git.(
+    Project.(
+      `Assoc [
+        ("repository", `String project.repo),
+        (
+          "changesets",
+          `Assoc [("changesetData", `List [`Assoc [("id", `String git.id)]])]
+        )
+      ]
+    )
+  );
+
+let add config project git review => {
+  let payload = createPayload project git;
+  Api.post config ("/" ^ review.Review.permaId ^ "/addChangeset") payload >|= (
+    fun a =>
+      switch a {
+      | Error error => Error error
+      | Success body => Success
+      }
+  )
 };

@@ -1,5 +1,22 @@
 open Lwt;
 
+let rec addChangeset config project git review => {
+  Lib.Changeset.add config project git review >>= (
+    fun response =>
+      switch response {
+      | Error e =>
+        print_endline e;
+        print_endline "Retrying in 3 seconds...";
+        Lwt_unix.sleep 3. >>= (
+          fun () => addChangeset config project git review
+        )
+      | Success =>
+        print_endline "changeset added";
+        Lwt.return_unit
+      }
+  )
+};
+
 let () = {
   let config = Lib.Config.make ();
   switch config {
@@ -13,14 +30,17 @@ let () = {
       | Some git =>
         Lib.Console.out "Found git dir";
         Lib.Console.out (Lib.Git.toString git);
-        /* let response = Lwt_main.run (Lib.Api.createReview config project); */
         let apiResponse = Lib.Review.create config project git;
         let tn =
-          apiResponse >|= (
+          apiResponse >>= (
             fun a =>
               switch a {
-              | Error e => print_endline e
-              | Success r => print_endline ("review created" ^ r.permaId)
+              | Error e =>
+                print_endline e;
+                Lwt.return_unit
+              | Success review =>
+                print_endline ("review created" ^ review.permaId);
+                addChangeset config project git review
               }
           );
         Lwt_main.run tn;
