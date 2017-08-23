@@ -1,6 +1,6 @@
 open Lwt;
 
-let rec addChangeset config project git review => {
+let rec addChangeset config project git review =>
   Lib.Changeset.add config project git review >>= (
     fun response =>
       switch response {
@@ -14,8 +14,20 @@ let rec addChangeset config project git review => {
         print_endline "changeset added";
         Lwt.return_unit
       }
-  )
-};
+  );
+
+let createReviewAndAddChangeset config project git =>
+  Lib.Review.create config project git >>= (
+    fun a =>
+      switch a {
+      | Error e =>
+        print_endline e;
+        Lwt.return_unit
+      | Success review =>
+        print_endline ("Review created: " ^ review.permaId);
+        addChangeset config project git review
+      }
+  );
 
 let () = {
   let config = Lib.Config.make ();
@@ -28,22 +40,8 @@ let () = {
       let git = Lib.Git.make ();
       switch git {
       | Some git =>
-        Lib.Console.out "Found git dir";
-        Lib.Console.out (Lib.Git.toString git);
-        let apiResponse = Lib.Review.create config project git;
-        let tn =
-          apiResponse >>= (
-            fun a =>
-              switch a {
-              | Error e =>
-                print_endline e;
-                Lwt.return_unit
-              | Success review =>
-                print_endline ("review created" ^ review.permaId);
-                addChangeset config project git review
-              }
-          );
-        Lwt_main.run tn;
+        let thread = createReviewAndAddChangeset config project git;
+        Lwt_main.run thread;
         ()
       | None => Lib.Console.out "Not a git directory - exiting."
       }
