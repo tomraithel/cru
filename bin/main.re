@@ -7,9 +7,7 @@ let rec addChangeset config project git review =>
       | Error e =>
         print_endline e;
         print_endline "Retrying in 3 seconds...";
-        Lwt_unix.sleep 3. >>= (
-          fun () => addChangeset config project git review
-        )
+        Lwt_unix.sleep 3. >>= (fun () => addChangeset config project git review)
       | Success =>
         print_endline "changeset added";
         Lwt.return_unit
@@ -29,32 +27,37 @@ let createReviewAndAddChangeset config project git =>
       }
   );
 
-let () = {
-  let config = Lib.Config.make ();
-  switch config {
-  | Some config =>
-    let project = Lib.Config.getCwdProject config;
-    switch project {
-    | Some project =>
-      Lib.Console.out ("Found project:" ^ project.path);
-      let git = Lib.Git.make ();
-      switch git {
-      | Some git =>
-        let thread = createReviewAndAddChangeset config project git;
-        Lwt_main.run thread;
-        ()
-      | None => Lib.Console.out "Not a git directory - exiting."
-      }
+let () =
+  try {
+    let config = Lib.Config.make ();
+    switch config {
+    | Some config =>
+      let project = Lib.Config.getCwdProject config;
+      switch project {
+      | Some project =>
+        Lib.Console.out ("Found project:" ^ project.path);
+        let git = Lib.Git.make ();
+        switch git {
+        | Some git =>
+          let thread = createReviewAndAddChangeset config project git;
+          Lwt_main.run thread;
+          ()
+        | None => Lib.Console.out "Not a git directory - exiting."
+        }
+      | None =>
+        Lib.Console.out (
+          "No project found, please make sure you add the current path (" ^
+          Lib.Project.getCwd () ^ ") to your config"
+        )
+      };
+      ()
     | None =>
       Lib.Console.out (
-        "No project found, please make sure you add the current path (" ^
-        Lib.Project.getCwd () ^ ") to your config"
+        "No config found. Please provide a config file under " ^ Lib.Config.configPath
       )
-    };
-    ()
-  | None =>
-    Lib.Console.out (
-      "No config found. Please provide a config file under " ^ Lib.Config.configPath
-    )
-  }
-};
+    }
+  } {
+  | Yojson.Json_error err => print_endline ("JSON error: " ^ err)
+  | Yojson.Basic.Util.Type_error err _ => print_endline ("JSON type error: " ^ err)
+  | Failure err => print_endline ("General error: " ^ err)
+  };

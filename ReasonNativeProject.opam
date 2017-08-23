@@ -18,7 +18,9 @@ build: [
 depends: [
   "jbuilder" {build}
   "reason"  {= "2.0.0"}
-  "re"
+  "yojson" {= "1.1.6"}
   "cohttp" {= "0.99.0"}
+  "cohttp-lwt-unix" {= "0.99.0"}
+  "lwt_ssl" {= "1.1.0"}
 ]
 available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
