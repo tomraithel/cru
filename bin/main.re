@@ -20,12 +20,25 @@ let createReview config project git =>
   Lib.Review.create config project git >>= (
     fun a =>
       switch a {
-      | Error e =>
+      | CreateError e =>
         print_endline e;
         Lwt.return None
-      | Success review =>
+      | CreateSuccess review =>
         print_endline ("Review created: " ^ review.permaId);
         Lwt.return (Some review)
+      }
+  );
+
+let abandonReview config review =>
+  Lib.Review.abandon config review >>= (
+    fun a =>
+      switch a {
+      | AbandonError e =>
+        print_endline e;
+        Lwt.return_unit
+      | AbandonSuccess =>
+        print_endline ("Review has been abandoned");
+        Lwt.return_unit
       }
   );
 
@@ -53,7 +66,9 @@ let () =
               Lwt_main.run thread
             } {
             | Sys.Break =>
-              print_endline ("BREAK OUT OF REVIEW " ^ review.permaId)
+              let thread = abandonReview config review;
+              Lwt_main.run thread
+            /* print_endline ("BREAK OUT OF REVIEW " ^ review.permaId) */
             }
           }
         | None => Lib.Console.out "Not a git directory - exiting."
