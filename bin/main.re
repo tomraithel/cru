@@ -7,23 +7,25 @@ let rec addChangeset config project git review =>
       | Error e =>
         print_endline e;
         print_endline "Retrying in 3 seconds...";
-        Lwt_unix.sleep 3. >>= (fun () => addChangeset config project git review)
+        Lwt_unix.sleep 3. >>= (
+          fun () => addChangeset config project git review
+        )
       | Success =>
         print_endline "changeset added";
         Lwt.return_unit
       }
   );
 
-let createReviewAndAddChangeset config project git =>
+let createReview config project git =>
   Lib.Review.create config project git >>= (
     fun a =>
       switch a {
       | Error e =>
         print_endline e;
-        Lwt.return_unit
+        Lwt.return None
       | Success review =>
         print_endline ("Review created: " ^ review.permaId);
-        addChangeset config project git review
+        Lwt.return (Some review)
       }
   );
 
@@ -39,9 +41,21 @@ let () =
         let git = Lib.Git.make ();
         switch git {
         | Some git =>
-          let thread = createReviewAndAddChangeset config project git;
-          Lwt_main.run thread;
-          ()
+          let thread = createReview config project git;
+          let review = Lwt_main.run thread;
+          switch review {
+          | None => ()
+          | Some review =>
+            /* Enable catching CTRL+C */
+            Sys.catch_break true;
+            try {
+              let thread = addChangeset config project git review;
+              Lwt_main.run thread
+            } {
+            | Sys.Break =>
+              print_endline ("BREAK OUT OF REVIEW " ^ review.permaId)
+            }
+          }
         | None => Lib.Console.out "Not a git directory - exiting."
         }
       | None =>
@@ -58,6 +72,7 @@ let () =
     }
   } {
   | Yojson.Json_error err => print_endline ("JSON error: " ^ err)
-  | Yojson.Basic.Util.Type_error err _ => print_endline ("JSON type error: " ^ err)
+  | Yojson.Basic.Util.Type_error err _ =>
+    print_endline ("JSON type error: " ^ err)
   | Failure err => print_endline ("General error: " ^ err)
   };
