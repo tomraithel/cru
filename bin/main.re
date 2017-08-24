@@ -37,7 +37,7 @@ let abandonReview config review =>
         print_endline e;
         Lwt.return_unit
       | AbandonSuccess =>
-        print_endline ("Review has been abandoned");
+        print_endline "Review has been abandoned";
         Lwt.return_unit
       }
   );
@@ -68,7 +68,6 @@ let () =
             | Sys.Break =>
               let thread = abandonReview config review;
               Lwt_main.run thread
-            /* print_endline ("BREAK OUT OF REVIEW " ^ review.permaId) */
             }
           }
         | None => Lib.Console.out "Not a git directory - exiting."

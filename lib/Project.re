@@ -21,7 +21,7 @@ let make json => {
   path: json |> member "path" |> to_string |> unslashed,
   key: json |> member "key" |> to_string,
   repo: json |> member "repo" |> to_string,
-  allowReviewersToJoin: true,
+  allowReviewersToJoin: true
 };
 
 let getCwd = Core.Sys.getcwd;
