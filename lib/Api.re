@@ -44,16 +44,12 @@ let callClient m config relativeUrl payload => {
   )
 };
 
+let withPost url ::headers ::body => Client.post url ::headers ::body;
+
+let withDelete url ::headers ::body => Client.delete url ::headers ::body;
+
 let post config relativeUrl payload =>
-  callClient
-    (fun url ::headers ::body => Client.post url ::headers ::body)
-    config
-    relativeUrl
-    payload;
+  callClient withPost config relativeUrl payload;
 
 let delete config relativeUrl payload =>
-  callClient
-    (fun url ::headers ::body => Client.delete url ::headers ::body)
-    config
-    relativeUrl
-    payload;
+  callClient withDelete config relativeUrl payload;
