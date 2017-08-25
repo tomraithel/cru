@@ -12,6 +12,10 @@ type abandonResponse =
   | AbandonError string
   | AbandonSuccess;
 
+type deleteResponse =
+  | DeleteError string
+  | DeleteSuccess;
+
 let makeCreateResponse responseString => {
   let json = Yojson.Basic.from_string responseString;
   {permaId: json |> member "permaId" |> member "id" |> to_string}
@@ -66,3 +70,15 @@ let abandon config review =>
       | Success _ => AbandonSuccess
       }
   );
+
+let delete config review =>
+  Api.delete config ("/" ^ review.permaId) (`Assoc []) >|= (
+    fun a =>
+      switch a {
+      | Error error => DeleteError error
+      | Success _ => DeleteSuccess
+      }
+  );
+
+let getDetailPageUrl config review =>
+  config.Config.crucible.url ^ "/cru/" ^ review.permaId;

@@ -5,13 +5,13 @@ let rec addChangeset config project git review =>
     fun response =>
       switch response {
       | Error e =>
-        print_endline e;
-        print_endline "Retrying in 3 seconds...";
+        Lib.Console.out e;
+        Lib.Console.out "\226\154\153  Retrying in 3 seconds...";
         Lwt_unix.sleep 3. >>= (
           fun () => addChangeset config project git review
         )
       | Success =>
-        print_endline "changeset added";
+        Lib.Console.out "\226\156\133  Changeset added.";
         Lwt.return_unit
       }
   );
@@ -21,24 +21,36 @@ let createReview config project git =>
     fun a =>
       switch a {
       | CreateError e =>
-        print_endline e;
+        Lib.Console.out e;
         Lwt.return None
       | CreateSuccess review =>
-        print_endline ("Review created: " ^ review.permaId);
+        Lib.Console.out (
+          "\226\156\133  Review created: " ^
+          Lib.Review.getDetailPageUrl config review
+        );
         Lwt.return (Some review)
       }
   );
 
-let abandonReview config review =>
+let abandonAndDeleteReview config review =>
   Lib.Review.abandon config review >>= (
     fun a =>
       switch a {
       | AbandonError e =>
-        print_endline e;
+        Lib.Console.out e;
         Lwt.return_unit
       | AbandonSuccess =>
-        print_endline "Review has been abandoned";
-        Lwt.return_unit
+        Lib.Review.delete config review >>= (
+          fun a =>
+            switch a {
+            | DeleteError e =>
+              Lib.Console.out e;
+              Lwt.return_unit
+            | DeleteSuccess =>
+              Lib.Console.out "\226\157\140  Review has been deleted";
+              Lwt.return_unit
+            }
+        )
       }
   );
 
@@ -66,7 +78,7 @@ let () =
               Lwt_main.run thread
             } {
             | Sys.Break =>
-              let thread = abandonReview config review;
+              let thread = abandonAndDeleteReview config review;
               Lwt_main.run thread
             }
           }
@@ -85,8 +97,8 @@ let () =
       )
     }
   } {
-  | Yojson.Json_error err => print_endline ("JSON error: " ^ err)
+  | Yojson.Json_error err => Lib.Console.out ("JSON error: " ^ err)
   | Yojson.Basic.Util.Type_error err _ =>
-    print_endline ("JSON type error: " ^ err)
-  | Failure err => print_endline ("General error: " ^ err)
+    Lib.Console.out ("JSON type error: " ^ err)
+  | Failure err => Lib.Console.out ("General error: " ^ err)
   };

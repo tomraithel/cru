@@ -37,7 +37,7 @@ let callClient m config relativeUrl payload => {
         body |> Cohttp_lwt.Body.to_string >|= (fun body => Success body)
       | true =>
         body |> Cohttp_lwt.Body.to_string >|= (
-          fun body => Error ("Error: \n" ^ body)
+          fun body => Error ("\240\159\148\165  " ^ body)
         )
       }
     }
