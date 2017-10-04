@@ -54,7 +54,16 @@ let abandonAndDeleteReview config review =>
       }
   );
 
-let () =
+let history () => {
+  let h = Lib.History.make ();
+  let h2 = Lib.History.addReview h "foo";
+  switch h2.reviews {
+  | [] => Lib.Console.out "no history :("
+  | [entry, ...tl] => Lib.Console.out entry
+  }
+};
+
+let review () =>
   try {
     let config = Lib.Config.make ();
     switch config {
@@ -62,7 +71,7 @@ let () =
       let project = Lib.Config.getCwdProject config;
       switch project {
       | Some project =>
-        Lib.Console.out ("Found project:" ^ project.path);
+        Lib.Console.out ("\027[32mFound project:" ^ project.path);
         let git = Lib.Git.make ();
         switch git {
         | Some git =>
@@ -102,3 +111,5 @@ let () =
     Lib.Console.out ("JSON type error: " ^ err)
   | Failure err => Lib.Console.out ("General error: " ^ err)
   };
+
+review ();
