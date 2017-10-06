@@ -12,7 +12,7 @@ let rec addChangeset config project git review =>
         )
       | Success =>
         Lib.Console.out "\226\156\133  Changeset added.";
-        Lwt.return_unit
+        Lwt.return review
       }
   );
 
@@ -54,16 +54,15 @@ let abandonAndDeleteReview config review =>
       }
   );
 
-let history () => {
+let showHistory () => {
   let h = Lib.History.make ();
-  let h2 = Lib.History.addReview h "foo";
-  switch h2.reviews {
+  switch h.reviews {
   | [] => Lib.Console.out "no history :("
   | [entry, ...tl] => Lib.Console.out entry
   }
 };
 
-let review () =>
+let createReview () =>
   try {
     let config = Lib.Config.make ();
     switch config {
@@ -84,7 +83,17 @@ let review () =>
             Sys.catch_break true;
             try {
               let thread = addChangeset config project git review;
-              Lwt_main.run thread
+              let thread2 =
+                thread >>= (
+                  fun review => {
+                    let _ =
+                      Lib.History.addReview
+                        (Lib.History.make ()) review.permaId;
+                    Lwt.return_unit
+                  }
+                );
+              Lwt_main.run thread2;
+              ()
             } {
             | Sys.Break =>
               let thread = abandonAndDeleteReview config review;
@@ -112,4 +121,30 @@ let review () =>
   | Failure err => Lib.Console.out ("General error: " ^ err)
   };
 
-review ();
+/* review (); */
+/* Command stuff */
+let create =
+  Core.Command.basic
+    summary::"[default] Creates a new review based on the current working directory"
+    Core.Command.Spec.(empty)
+    createReview;
+
+let add =
+  Core.Command.basic
+    summary::"Adds the changeset that has been created in current directory to the last review in history"
+    Core.Command.Spec.(empty)
+    (fun () => Core.printf "TODO\n");
+
+let history =
+  Core.Command.basic
+    summary::"Shows the history of the last created reviews (new ones on top)"
+    Core.Command.Spec.(empty)
+    showHistory;
+
+let command =
+  Core.Command.group
+    summary::"Create and modify crucible reviews"
+    body::(fun path::_ => createReview ()) /* Use createReview if no subcommand is passed*/
+    [("create", create), ("add", add), ("history", history)];
+
+let () = Core.Command.run command;

@@ -19,7 +19,9 @@ let make () =>
   };
 
 let toJson history =>
-  `Assoc [("reviews", `List (List.map history.reviews f::(fun v => `String v)))];
+  `Assoc [
+    ("reviews", `List (List.map history.reviews f::(fun v => `String v)))
+  ];
 
 let addReview history review => {
   let newHistory = {reviews: [review, ...history.reviews]};
