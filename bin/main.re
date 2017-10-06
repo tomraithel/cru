@@ -11,8 +11,10 @@ let rec addChangeset config project git review =>
           fun () => addChangeset config project git review
         )
       | Success =>
-        Lib.Console.out "\226\156\133  Changeset added.";
-        Lwt.return review
+        Lib.Console.out (
+          "\226\156\133  Changeset added to review " ^ review.permaId
+        );
+        Lwt.return_unit
       }
   );
 
@@ -26,7 +28,7 @@ let createReview config project git =>
       | CreateSuccess review =>
         Lib.Console.out (
           "\226\156\133  Review created: " ^
-          Lib.Review.getDetailPageUrl config review
+          Lib.Review.getReadableName config review
         );
         Lwt.return (Some review)
       }
@@ -54,61 +56,11 @@ let abandonAndDeleteReview config review =>
       }
   );
 
-let showHistory () => {
-  let h = Lib.History.make ();
-  switch h.reviews {
-  | [] => Lib.Console.out "no history :("
-  | [entry, ...tl] => Lib.Console.out entry
-  }
-};
-
-let createReview () =>
+let loadConfig fn =>
   try {
     let config = Lib.Config.make ();
     switch config {
-    | Some config =>
-      let project = Lib.Config.getCwdProject config;
-      switch project {
-      | Some project =>
-        Lib.Console.out ("\027[32mFound project:" ^ project.path);
-        let git = Lib.Git.make ();
-        switch git {
-        | Some git =>
-          let thread = createReview config project git;
-          let review = Lwt_main.run thread;
-          switch review {
-          | None => ()
-          | Some review =>
-            /* Enable catching CTRL+C */
-            Sys.catch_break true;
-            try {
-              let thread = addChangeset config project git review;
-              let thread2 =
-                thread >>= (
-                  fun review => {
-                    let _ =
-                      Lib.History.addReview
-                        (Lib.History.make ()) review.permaId;
-                    Lwt.return_unit
-                  }
-                );
-              Lwt_main.run thread2;
-              ()
-            } {
-            | Sys.Break =>
-              let thread = abandonAndDeleteReview config review;
-              Lwt_main.run thread
-            }
-          }
-        | None => Lib.Console.out "Not a git directory - exiting."
-        }
-      | None =>
-        Lib.Console.out (
-          "No project found, please make sure you add the current path (" ^
-          Lib.Project.getCwd () ^ ") to your config"
-        )
-      };
-      ()
+    | Some config => fn config
     | None =>
       Lib.Console.out (
         "No config found. Please provide a config file under " ^ Lib.Config.configPath
@@ -121,8 +73,99 @@ let createReview () =>
   | Failure err => Lib.Console.out ("General error: " ^ err)
   };
 
-/* review (); */
-/* Command stuff */
+let showHistory () =>
+  loadConfig (
+    fun config => {
+      let h = Lib.History.make ();
+      switch h.reviews {
+      | [] =>
+        Lib.Console.out "No history available - you have to create reviews first!"
+      | l =>
+        Lib.Console.out (
+          "History of created reviews: \n" ^
+          Core.String.concat
+            sep::"\n"
+            (
+              Core.List.map
+                f::(
+                  fun permaId =>
+                    Lib.Review.getReadableName config {permaId: permaId}
+                )
+                l
+            )
+        )
+      }
+    }
+  );
+
+/* Prepares the current working directory context and calls fn when done */
+let prepareContext fn =>
+  loadConfig (
+    fun config => {
+      let project = Lib.Config.getCwdProject config;
+      switch project {
+      | Some project =>
+        Lib.Console.out ("\027[32mFound project:" ^ project.path);
+        let git = Lib.Git.make ();
+        switch git {
+        | Some git => fn (config, project, git)
+        | None => Lib.Console.out "Not a git directory - exiting."
+        }
+      | None =>
+        Lib.Console.out (
+          "No project found, please make sure you add the current path (" ^
+          Lib.Project.getCwd () ^ ") to your config"
+        )
+      };
+      ()
+    }
+  );
+
+let createReview () =>
+  prepareContext (
+    fun (config, project, git) => {
+      let thread = createReview config project git;
+      let review = Lwt_main.run thread;
+      switch review {
+      | None => ()
+      | Some review =>
+        /* Enable catching CTRL+C */
+        Sys.catch_break true;
+        try {
+          let thread =
+            addChangeset config project git review >>= (
+              fun () => {
+                let _ =
+                  Lib.History.addReview (Lib.History.make ()) review.permaId;
+                Lwt.return_unit
+              }
+            );
+          Lwt_main.run thread;
+          ()
+        } {
+        | Sys.Break =>
+          let thread = abandonAndDeleteReview config review;
+          Lwt_main.run thread
+        }
+      }
+    }
+  );
+
+let addReview () =>
+  prepareContext (
+    fun (config, project, git) => {
+      let h = Lib.History.make ();
+      switch h.reviews {
+      | [] => Lib.Console.out "Could not add changeset - history is empty"
+      | [permaId, ...rest] =>
+        Lwt_main.run (
+          addChangeset config project git (Lib.Review.make permaId)
+        )
+      }
+    }
+  );
+
+/* Commands */
 let create =
   Core.Command.basic
     summary::"[default] Creates a new review based on the current working directory"
@@ -133,7 +176,7 @@ let add =
   Core.Command.basic
     summary::"Adds the changeset that has been created in current directory to the last review in history"
     Core.Command.Spec.(empty)
-    (fun () => Core.printf "TODO\n");
+    addReview;
 
 let history =
   Core.Command.basic

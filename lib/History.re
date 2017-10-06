@@ -2,7 +2,7 @@ open Yojson.Basic.Util;
 
 open Core;
 
-type t = {reviews: list HistoryReview.t};
+type t = {reviews: list string};
 
 let historyPath = Core.Sys.getenv_exn "HOME" ^ "/.review.history.json";
 
@@ -12,7 +12,7 @@ let make () =>
     {
       reviews:
         history |> member "reviews" |> to_list |>
-        List.map f::HistoryReview.make
+        List.map f::Yojson.Basic.Util.to_string
     }
   } else {
     {reviews: []}

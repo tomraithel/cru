@@ -2,7 +2,9 @@ open Lwt;
 
 open Yojson.Basic.Util;
 
-type createSuccess = {permaId: string};
+type t = {permaId: string};
+
+type createSuccess = t;
 
 type createResponse =
   | CreateError string
@@ -15,6 +17,8 @@ type abandonResponse =
 type deleteResponse =
   | DeleteError string
   | DeleteSuccess;
+
+let make permaId => {permaId: permaId};
 
 let makeCreateResponse responseString => {
   let json = Yojson.Basic.from_string responseString;
@@ -82,3 +86,6 @@ let delete config review =>
 
 let getDetailPageUrl config review =>
   config.Config.crucible.url ^ "/cru/" ^ review.permaId;
+
+let getReadableName config review =>
+  review.permaId ^ " ===> " ^ getDetailPageUrl config review;
