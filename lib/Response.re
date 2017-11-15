@@ -3,7 +3,8 @@ open Yojson;
 open Yojson.Basic.Util;
 
 let json =
-  Yojson.Basic.from_string {|
+  Yojson.Basic.from_string(
+    {|
 {
   "reviewData": {
     "author": {
@@ -17,6 +18,7 @@ let json =
     "allowReviewersToJoin": true
   }
 }
-|};
+|}
+  );
 
-let name = json |> member "reviewData" |> member "name" |> to_string;
+let name = json |> member("reviewData") |> member("name") |> to_string;

@@ -1,29 +1,27 @@
 open Lwt;
 
 type t =
-  | Error string
+  | Error(string)
   | Success;
 
-let createPayload project git =>
+let createPayload = (project, git) =>
   Git.(
     Project.(
-      `Assoc [
-        ("repository", `String project.repo),
-        (
-          "changesets",
-          `Assoc [("changesetData", `List [`Assoc [("id", `String git.id)]])]
-        )
-      ]
+      `Assoc([
+        ("repository", `String(project.repo)),
+        ("changesets", `Assoc([("changesetData", `List([`Assoc([("id", `String(git.id))])]))]))
+      ])
     )
   );
 
-let add config project git review => {
-  let payload = createPayload project git;
-  Api.post config ("/" ^ review.Review.permaId ^ "/addChangeset") payload >|= (
-    fun a =>
+let add = (config, project, git, review) => {
+  let payload = createPayload(project, git);
+  Api.post(config, "/" ++ (review.Review.permaId ++ "/addChangeset"), payload)
+  >|= (
+    (a) =>
       switch a {
-      | Error error => Error error
-      | Success body => Success
+      | Error(error) => Error(error)
+      | Success(body) => Success
       }
   )
 };

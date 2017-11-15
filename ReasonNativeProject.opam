@@ -16,11 +16,12 @@ build: [
   ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 depends: [
+  "core"  {= "v0.9.0"}
   "jbuilder" {build}
-  "reason"  {= "2.0.0"}
+  "reason"  {= "3.0.0"}
   "yojson" {= "1.1.6"}
   "cohttp" {= "0.99.0"}
   "cohttp-lwt-unix" {= "0.99.0"}
   "lwt_ssl" {= "1.1.0"}
 ]
-available: [ ocaml-version >= "4.02" & ocaml-version < "4.05" ]
+available: [ ocaml-version >= "4.02" & ocaml-version < "4.06" ]
