@@ -31,7 +31,9 @@ let callClient = (m, config, relativeUrl, payload) => {
       switch isError {
       | false => body |> Cohttp_lwt.Body.to_string >|= ((body) => Success(body))
       | true =>
-        body |> Cohttp_lwt.Body.to_string >|= ((body) => Error("\240\159\148\165  " ++ body))
+        body
+        |> Cohttp_lwt.Body.to_string
+        >|= ((body) => Error(Console.colorize(body, Console.Red)))
       }
     }
   )

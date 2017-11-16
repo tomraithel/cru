@@ -92,4 +92,4 @@ let getDetailPageUrl = (config, review) =>
   config.Config.crucible.url ++ ("/cru/" ++ review.permaId);
 
 let getReadableName = (config, review) =>
-  review.permaId ++ (" => " ++ getDetailPageUrl(config, review));
+  review.permaId ++ (" => " ++ Console.colorize(getDetailPageUrl(config, review), Console.Green));

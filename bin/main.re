@@ -6,9 +6,9 @@ let rec addChangeset = (config, project, git, review) =>
     (response) =>
       switch response {
       | Error(e) =>
-        Lib.Console.out(e);
-        Lib.Console.out("Retrying in 3 seconds...");
-        Lwt_unix.sleep(3.) >>= (() => addChangeset(config, project, git, review))
+        /* Lib.Console.out(e); */
+        Lib.Console.out("Failed to add changeset. Retrying...");
+        Lwt_unix.sleep(2.) >>= (() => addChangeset(config, project, git, review))
       | Success =>
         Lib.Console.out(
           "Changeset added to review " ++ Lib.Review.getReadableName(config, review)
@@ -26,7 +26,7 @@ let createReview = (config, project, git) =>
         Lib.Console.out(e);
         Lwt.return(None)
       | CreateSuccess(review) =>
-        Lib.Console.out("Review created: " ++ review.permaId);
+        Lib.Console.out(~color=Lib.Console.Green, "Review created: " ++ review.permaId);
         Lwt.return(Some(review))
       }
   );
@@ -48,7 +48,7 @@ let abandonAndDeleteReview = (config, review) =>
               Lib.Console.out(e);
               Lwt.return_unit
             | DeleteSuccess =>
-              Lib.Console.out("Review has been deleted");
+              Lib.Console.out(~color=Lib.Console.Green, "\rReview has been deleted");
               Lwt.return_unit
             }
         )
@@ -62,13 +62,16 @@ let loadConfig = (fn) =>
     | Some(config) => fn(config)
     | None =>
       Lib.Console.out(
-        "No config found. Please provide a config file under " ++ Lib.Config.configPath
+        ~color=Lib.Console.Red,
+        "No config found. Please provide a config file at following path: "
+        ++ Lib.Config.configPath
       )
     }
   } {
-  | Yojson.Json_error(err) => Lib.Console.out("JSON error: " ++ err)
-  | Yojson.Basic.Util.Type_error(err, _) => Lib.Console.out("JSON type error: " ++ err)
-  | Failure(err) => Lib.Console.out("General error: " ++ err)
+  | Yojson.Json_error(err) => Lib.Console.out(~color=Lib.Console.Red, "JSON error: " ++ err)
+  | Yojson.Basic.Util.Type_error(err, _) =>
+    Lib.Console.out(~color=Lib.Console.Red, "JSON type error: " ++ err)
+  | Failure(err) => Lib.Console.out(~color=Lib.Console.Red, "General error: " ++ err)
   };
 
 let showHistory = () =>
@@ -78,7 +81,7 @@ let showHistory = () =>
       switch h.reviews {
       | [] => Lib.Console.out("No history available - you have to create reviews first!")
       | l =>
-        Lib.Console.out(~color=4, "History of created reviews:");
+        Lib.Console.out(~color=Lib.Console.Bright, "History of created reviews:");
         Lib.Console.out(
           Core.String.concat(
             ~sep="\n",
@@ -103,10 +106,11 @@ let prepareContext = (fn) =>
         let git = Lib.Git.make();
         switch git {
         | Some(git) => fn((config, project, git))
-        | None => Lib.Console.out("Not a git directory - exiting.")
+        | None => Lib.Console.out(~color=Lib.Console.Red, "Not a git directory - exiting.")
         }
       | None =>
         Lib.Console.out(
+          ~color=Lib.Console.Red,
           "No project found, please make sure you add the current path ("
           ++ (Lib.Project.getCwd() ++ ") to your config")
         )
