@@ -7,10 +7,12 @@ let rec addChangeset = (config, project, git, review) =>
       switch response {
       | Error(e) =>
         Lib.Console.out(e);
-        Lib.Console.out("\226\154\153  Retrying in 3 seconds...");
+        Lib.Console.out("Retrying in 3 seconds...");
         Lwt_unix.sleep(3.) >>= (() => addChangeset(config, project, git, review))
       | Success =>
-        Lib.Console.out("\226\156\133  Changeset added to review " ++ review.permaId);
+        Lib.Console.out(
+          "Changeset added to review " ++ Lib.Review.getReadableName(config, review)
+        );
         Lwt.return_unit
       }
   );
@@ -24,9 +26,7 @@ let createReview = (config, project, git) =>
         Lib.Console.out(e);
         Lwt.return(None)
       | CreateSuccess(review) =>
-        Lib.Console.out(
-          "\226\156\133  Review created: " ++ Lib.Review.getReadableName(config, review)
-        );
+        Lib.Console.out("Review created: " ++ review.permaId);
         Lwt.return(Some(review))
       }
   );
@@ -48,7 +48,7 @@ let abandonAndDeleteReview = (config, review) =>
               Lib.Console.out(e);
               Lwt.return_unit
             | DeleteSuccess =>
-              Lib.Console.out("\226\157\140  Review has been deleted");
+              Lib.Console.out("Review has been deleted");
               Lwt.return_unit
             }
         )
@@ -78,15 +78,15 @@ let showHistory = () =>
       switch h.reviews {
       | [] => Lib.Console.out("No history available - you have to create reviews first!")
       | l =>
+        Lib.Console.out(~color=4, "History of created reviews:");
         Lib.Console.out(
-          "History of created reviews: \n"
-          ++ Core.String.concat(
-               ~sep="\n",
-               Core.List.map(
-                 ~f=(permaId) => Lib.Review.getReadableName(config, {permaId: permaId}),
-                 l
-               )
-             )
+          Core.String.concat(
+            ~sep="\n",
+            Core.List.map(
+              ~f=(permaId) => Lib.Review.getReadableName(config, {permaId: permaId}),
+              l
+            )
+          )
         )
       }
     }
@@ -99,7 +99,7 @@ let prepareContext = (fn) =>
       let project = Lib.Config.getCwdProject(config);
       switch project {
       | Some(project) =>
-        Lib.Console.out("\027[32mFound project:" ++ project.path);
+        Lib.Console.out("Found project: " ++ project.path);
         let git = Lib.Git.make();
         switch git {
         | Some(git) => fn((config, project, git))
