@@ -52,3 +52,11 @@ let out = (~color: option(color)=?, str: string) =>
   | None => print_endline(str)
   | Some(color) => print_endline(colorize(str, color))
   };
+
+let outOneLine = (~color: option(color)=?, str: string) => {
+  switch color {
+  | None => print_string(str)
+  | Some(color) => print_string(colorize(str, color))
+  };
+  Core.Out_channel.flush(Core.Out_channel.stdout)
+};

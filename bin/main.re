@@ -1,14 +1,17 @@
 open Lwt;
 
-let rec addChangeset = (config, project, git, review) =>
+let rec addChangeset = (~iterator=0, config, project, git, review) =>
   Lib.Changeset.add(config, project, git, review)
   >>= (
     (response) =>
       switch response {
       | Error(e) =>
         /* Lib.Console.out(e); */
-        Lib.Console.out("Failed to add changeset. Retrying...");
-        Lwt_unix.sleep(2.) >>= (() => addChangeset(config, project, git, review))
+        Lib.Console.outOneLine(
+          "\rFailed to add changeset. Retrying" ++ Lib.Util.stringRepeat(".", iterator)
+        );
+        Lwt_unix.sleep(2.)
+        >>= (() => addChangeset(~iterator=iterator + 1, config, project, git, review))
       | Success =>
         Lib.Console.out(
           "Changeset added to review " ++ Lib.Review.getReadableName(config, review)
@@ -48,7 +51,7 @@ let abandonAndDeleteReview = (config, review) =>
               Lib.Console.out(e);
               Lwt.return_unit
             | DeleteSuccess =>
-              Lib.Console.out(~color=Lib.Console.Green, "\rReview has been deleted");
+              Lib.Console.out(~color=Lib.Console.Green, "\r\nReview has been deleted");
               Lwt.return_unit
             }
         )
