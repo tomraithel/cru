@@ -8,13 +8,13 @@ let rec addChangeset = (~iterator=0, config, project, git, review) =>
       | Error(e) =>
         /* Lib.Console.out(e); */
         Lib.Console.outOneLine(
-          "\rFailed to add changeset. Retrying" ++ Lib.Util.stringRepeat(".", iterator)
+          "\rFailed to add changeset. Retrying." ++ Lib.Util.stringRepeat(".", iterator)
         );
         Lwt_unix.sleep(2.)
         >>= (() => addChangeset(~iterator=iterator + 1, config, project, git, review))
       | Success =>
         Lib.Console.out(
-          "Changeset added to review " ++ Lib.Review.getReadableName(config, review)
+          "\nChangeset added to review " ++ Lib.Review.getReadableName(config, review)
         );
         Lwt.return_unit
       }
