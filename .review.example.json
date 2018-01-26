@@ -1,0 +1,14 @@
+{
+  "crucible": {
+    "url": "https://url-to-your-crucible-api/review",
+    "userName": "your.username",
+    "password": "4ny!pa$$"
+  },
+  "projects": [
+    {
+      "path": "/Users/me/code/myproject",
+      "key": "KEY-OF-PROJECT",
+      "repo": "repo_name"
+    }
+  ]
+}

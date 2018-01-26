@@ -1,70 +1,60 @@
-# ReasonNativeProject
+# CRUCIBLE commandline tool
 
-Installation of [`Reason`](http://reasonml.github.io/) project for native compilation development.
+A tool to create [Crucible](https://de.atlassian.com/software/crucible) code reviews based on your last commit.
 
-[More info on the workflow](https://reasonml.github.io/guide/native).
+It´s basically a port of [this gist](https://gist.github.com/evant/8937831) to the [Reason](https://reasonml.github.io/) language and some additional features.
 
-[![Build Status](https://travis-ci.org/reasonml/ReasonNativeProject.svg?branch=master)](https://travis-ci.org/reasonml/ReasonNativeProject)
+## Prerequisites
 
-## Install
+In oder to build this tool, please install [Reason](https://reasonml.github.io/).
 
-Clone the repo and install the dependencies:
+Only tested in **MacOS**
 
-```sh
-git clone https://github.com/reasonml/ReasonNativeProject.git
-cd ReasonNativeProject
-opam update # get the latest opam packages data. Skip this optionally
-# opam will read into the `opam` file and add the other dependencies
-opam pin add -y ReasonNativeProject .
+## Build
+
+- clone this repo
+- `cd cru`
+- run `make build` to build the project
+- this creates a new executable at `/_build/install/default/bin/reason-native-bin`
+- link the executable `ln -s $PWD/_build/install/default/bin/reason-native-bin /usr/local/bin/cru` to make it available via your commandline
+
+## Configuration
+
+This tool expects a `.review.json` file in your home directory. This file holds your credentials and a configuration for each local directory that is linked to a Crucible repo.
+
+- Run `cp .review.example.json ~/.review.json`
+- Open `~/.review.json` in your editor and adjust the settings
+- You can add as many projects as you want
+
+```json
+{
+  "crucible": {
+    "url": "https://url-to-your-crucible-api/review",
+    "userName": "your.username",
+    "password": "4ny!pa$$"
+  },
+  "projects": [
+    {
+      "path": "/Users/me/code/myproject",
+      "key": "KEY-OF-PROJECT",
+      "repo": "repo_name"
+    }
+  ]
+}
 ```
 
-### Build
+## Usage
 
-There are a couple of built-in commands in the `Makefile`.
+Type `cru --help` to see a list of supported commands
 
-```sh
-make build    # build/rebuild your files
-make clean    # clean the compiled artifacts
-```
+### `cru create` or just `cru`
 
-A single test file `./src/test.re` is included. Make a simple change to it and
-then run the commands above to see it effect the output.
+The default command creates a new review and adds a new changeset to review based on your last commit. In order to make this work, this commit has to be pushed to the remote already.
 
-The built output is in `_build`. Try running it with `_build/src/test.native`.
+### `cru add`
 
-## Developing Your Project
+Adds an additional changeset to the last created review.
 
-`ReasonNativeProject` is meant to be the starting point of your own project. You'll
-want to make use of existing libraries in your app, so browse the growing set
-of `opam` packages in the [opam repository](http://opam.ocaml.org/packages/).
+### `cru history`
 
-##### Add Another Dependency
-
-Edit your `opam` file so that you depend on a particular opam package and range
-of versions.
-
-In addition you may have to tweak the buildstep to recognize the dependency, by changing `build.ml` within the `pkg` folder. and add the following for you dependency:
-```ocaml
-...
-OS.Cmd.run @@ Cmd.(
-  ocamlbuild % "-use-ocamlfind"
-              %% (v "-I" % "src")
-              %% (v "-pkg" % "[PACKAGE]") (* <---- only change is this line*)
-              %% of_list files)
-...
-```
-
-Finally For your editor to pick up the dependency and fancy autocomplete etc. make sure to add the package in your `.merlin` file:
-```ocaml
-PKG topkg reason [PACKAGE]
-```
-
-### Creating Libraries
-
-See the [OPAM instructions](https://opam.ocaml.org/doc/Packaging.html).
-
-## Troubleshooting
-
-In general, if something goes wrong, try upgrading your install of the project
-by running `opam upgrade ReasonNativeProject`, or if it failed to install and you
-later fixed it, `opam install ReasonNativeProject`.
+Shows all created reviews. All created reviews are saved in `~/.review.history.json`.
