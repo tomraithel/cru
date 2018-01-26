@@ -14,7 +14,9 @@ let rec addChangeset = (~iterator=0, config, project, git, review) =>
         >>= (() => addChangeset(~iterator=iterator + 1, config, project, git, review))
       | Success =>
         Lib.Console.out(
-          "\nChangeset added to review " ++ Lib.Review.getReadableName(config, review)
+          (iterator == 0 ? "" : "\n")
+          ++ "Changeset added to review "
+          ++ Lib.Review.getReadableName(config, review)
         );
         Lwt.return_unit
       }
