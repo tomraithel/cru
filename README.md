@@ -14,6 +14,10 @@ Only tested in **MacOS**
 
 - clone this repo
 - `cd cru`
+- Make sure opam is installed: `brew install gpatch opam`
+- Init opam: `opam init`
+- Install dune `opam install dune`
+- Install dependencies `opam install .`
 - run `make build` to build the project
 - this creates a new executable at `/_build/install/default/bin/reason-native-bin`
 - link the executable `ln -s $PWD/_build/install/default/bin/reason-native-bin /usr/local/bin/cru` to make it available via your commandline

@@ -20,6 +20,6 @@ let cmdToList = (command) => {
 
 let cmdToString = (command) =>
   switch (cmdToList(command)) {
-  | [hd, ...rest] => hd
+  | [hd, ..._] => hd
   | _ => ""
   };

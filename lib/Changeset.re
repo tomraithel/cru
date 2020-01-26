@@ -21,7 +21,7 @@ let add = (config, project, git, review) => {
     (a) =>
       switch a {
       | Error(error) => Error(error)
-      | Success(body) => Success
+      | Success(_body) => Success
       }
   )
 };

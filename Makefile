@@ -1,11 +1,11 @@
 build:
-	jbuilder build
+	dune build
 
 run: build
-	./_build/install/default/bin/reason-native-bin
+	./_build/install/default/bin/cru
 
 test:
-	jbuilder runtest
+	dune runtest
 
 clean:
 	rm -rf _build *.install

@@ -1,0 +1,7 @@
+(executables
+ (names main)
+ (libraries cru))
+
+(install
+ (section bin)
+ (files (main.exe as cru)))

@@ -24,6 +24,6 @@ let getCwdProject = (config) => {
   let projects = List.filter(config.projects, ~f=Project.matchesCwd);
   switch projects {
   | [] => None
-  | [hd, ...tl] => Some(hd)
+  | [hd, ..._] => Some(hd)
   }
 };

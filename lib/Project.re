@@ -26,4 +26,4 @@ let make = (json) => {
 
 let getCwd = Core.Sys.getcwd;
 
-let matchesCwd = (project) => Core.String.is_prefix(slashed(getCwd()), slashed(project.path));
+let matchesCwd = (project) => Core.String.is_prefix(slashed(getCwd()), ~prefix=slashed(project.path));

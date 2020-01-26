@@ -1,5 +1,3 @@
-open Yojson;
-
 open Yojson.Basic.Util;
 
 let json =
