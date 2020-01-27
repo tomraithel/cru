@@ -14,7 +14,7 @@ Only tested in **MacOS**
 
 - clone this repo
 - `cd cru`
-- Make sure opam is installed: `brew install gpatch opam`
+- Make sure opam is installed: `brew install gpatch pkg-config opam`
 - Init opam: `opam init`
 - Install dune `opam install dune`
 - Install dependencies `opam install .`
